@@ -6,7 +6,7 @@ import pika
 import threading
 
 def recepcionRepartidores(ch, method, properties, body):
-    print("gika")
+    
     counter = 0
     probability = random.randint(0,10)
     wait = random.randint(10,20)
@@ -18,19 +18,18 @@ def recepcionRepartidores(ch, method, properties, body):
         counter += 1
     print("Mensaje llego con exito")
 
-def recepcionRobots(ch, method, properties, body):
-    print(body)
-    print(ch)
+def recepcionRobots(ch, method, props, body):
     wait = random.randint(5,10)
     probability = random.randint(0,10)
     ceiling = random.randint(0,10)
 
     if (probability >= ceiling):
         time.sleep(wait)
-        ch.basic_publish(exchange='', routing_key='controlador', body = body)
+        ch.basic_publish(exchange='', routing_key=props.reply_to,properties=pika.BasicProperties(correlation_id = props.correlation_id), body = body)
         
     else:
-        print("Error while executing transaction")
+        print("dame una alegria")
+        ch.basic_publish(exchange='', routing_key=props.reply_to,properties=pika.BasicProperties(correlation_id = props.correlation_id), body = "Not enough products")
         return
     
     return
@@ -79,6 +78,7 @@ def on_request(ch, method, props, body):
                         properties=pika.BasicProperties(correlation_id = props.correlation_id),
                         body="Pedido correcto")
             ch.basic_ack(delivery_tag=method.delivery_tag)
+
             hilo = threading.Thread(target=recepcionRobots, args = (ch, method, props, body))
             hilo.start()
 def main():

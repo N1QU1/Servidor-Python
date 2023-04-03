@@ -11,4 +11,4 @@ class Pedidos:
         self.state = "creado"
         self.id = uuid.uuid4() 
     def __str__(self):
-        return "Pedido:[productos = {};id_cliente = {};estado = {};id_pedido = {}]".format(self.prods,self.client_id,self.prods,self.id)
+        return "Pedido:[productos = {};id_cliente = {};estado = {};id_pedido = {}]".format(self.prods,self.client_id,self.state,self.id)

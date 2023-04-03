@@ -7,16 +7,18 @@ from controlador import recepcionRobots
     
 
 def main():
-    con = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    connection = pika.BlockingConnection(
+        pika.ConnectionParameters(host='localhost'))
 
-    ch = con.channel()
+    channel = connection.channel()
 
-    ch.queue_declare(queue='robots')
+    channel.queue_declare(queue='controlador')
 
-    ch.basic_consume(on_message_callback = recepcionRobots, queue='robots', auto_ack=True)
-    print(' [*] Waiting for messages. To exit press CTRL+C')
+    channel.basic_qos(prefetch_count=1)
+    channel.basic_consume(queue='controlador', on_message_callback=recepcionRobots)
 
-    ch.start_consuming()
+    print(" [x] Awaiting controller requests")
+    channel.start_consuming()
     
 if __name__ == '__main__':
     try:
