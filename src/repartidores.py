@@ -4,6 +4,7 @@ import sys
 import time
 from controlador import recepcionRepartidores
 import pika
+#problema en colision entre callback de funcion estoy haciendo un bucle raro entre la recepcion y el envio por accidente, tengo que separar las funciones para que asi tenga sentido
 def main():
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(host='localhost'))

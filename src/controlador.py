@@ -78,6 +78,7 @@ def on_request(ch, method, props, body):
                         properties=pika.BasicProperties(correlation_id = props.correlation_id),
                         body="Pedido correcto")
             ch.basic_ack(delivery_tag=method.delivery_tag)
+            #echar un ojo al envio de mensaje
 
             hilo = threading.Thread(target=recepcionRobots, args = (ch, method, props, body))
             hilo.start()
