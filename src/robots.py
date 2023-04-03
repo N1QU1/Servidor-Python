@@ -27,6 +27,5 @@ if __name__ == '__main__':
             sys.exit(0)
         except SystemExit:
             os._exit(0)
-print("Cola abierta.")
 
 

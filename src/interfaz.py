@@ -95,7 +95,7 @@ def main():
                 pedido = Pedidos("", ids)
             else:
                 pedido = Pedidos(client.id, ids)
-            sendPedido(pedido,rpc)
+            print(sendPedido(pedido,rpc))
             
         elif int(value) == 3:
             # eliminar pedido
