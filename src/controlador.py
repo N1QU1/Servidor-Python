@@ -43,7 +43,6 @@ def on_request(ch, method, props, body):
                         body="Pedido: incorrecto")
         ch.basic_ack(delivery_tag=method.delivery_tag)
     else:
-        
         if verif == "repartidor":
             ch.basic_publish(exchange='',
                         routing_key="repartidor",
@@ -58,11 +57,13 @@ def on_request(ch, method, props, body):
                         properties=pika.BasicProperties(correlation_id = props.correlation_id),
                         body="Pedido: correcto ")
             ch.basic_ack(delivery_tag=method.delivery_tag)
+            print("error en robot")
             
             ch.basic_publish(exchange='',
                         routing_key="robot",
                         properties=pika.BasicProperties(correlation_id = props.correlation_id),
                         body=body)
+                        
  
 def main():
     connection = pika.BlockingConnection(

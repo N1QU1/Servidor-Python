@@ -19,4 +19,4 @@ class Cliente:
         for ele in self.pedidos:
             ids+= str(ele)
             ids+= ','
-        return "Cliente: [name = {};pedidos = {}; id = {}]".format(self.name,ids[:-1],self.id)
+        return "Cliente: [name = {}; pedidos = {}; id = {}]".format(self.name,ids[:-1],self.id)

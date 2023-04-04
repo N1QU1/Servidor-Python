@@ -7,8 +7,11 @@ import threading
 def recepcionRobots(ch, method, props, body):
     print("Mensaje recibido con exito" )
     hilo = threading.Thread(target = work, args = (ch,method,props,body))
-    hilo.start()
+    #hilo.start()
     return
+def sendMessage(ch, method, props, body):
+    ch.basic_publish(exchange='', routing_key='controlador',properties=pika.BasicProperties(correlation_id = props.correlation_id), body = "Robot: not found")
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 def work(ch, method, props, body):
     wait = random.randint(5,10)
@@ -18,16 +21,14 @@ def work(ch, method, props, body):
     pika.ConnectionParameters(host='localhost'))
     ch = connection.channel()
 
-        
     if (probability >= ceiling):
         time.sleep(wait)
         print("Envio de pedido")
-        ch.basic_publish(exchange='', routing_key="controlador",properties=pika.BasicProperties(correlation_id = props.correlation_id), body = "Robot: Id_pedido {}".format(parseBody(body)[:-1]))
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+        sendMessage(ch, method, props, "Robot: Id_pedido {}".format(parseBody(body)[:-1]))
     else:
         print("Products not found")
-        ch.basic_publish(exchange='', routing_key="controlador",properties=pika.BasicProperties(correlation_id = props.correlation_id), body = "Robot: not found")
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+        sendMessage(ch, method, props, "Robot: not found")
+
 
 def parseBody(body):
     body = str(body)
