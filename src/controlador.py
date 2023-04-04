@@ -24,8 +24,9 @@ def parseBody(body:str):
     elif body.find('Robot:') >= 0:
         if body.find("not found") >= 0:
             return "not found"
-        print("{}".format(body))
-        return "repartidor"
+        else:
+            print("{}".format(body))
+            return "repartidor"
 
 def on_request(ch, method, props, body):
     verif = parseBody(str(body))
@@ -57,7 +58,6 @@ def on_request(ch, method, props, body):
                         properties=pika.BasicProperties(correlation_id = props.correlation_id),
                         body="Pedido: correcto ")
             ch.basic_ack(delivery_tag=method.delivery_tag)
-            print("error en robot")
             
             ch.basic_publish(exchange='',
                         routing_key="robot",
@@ -73,7 +73,7 @@ def main():
 
     channel.queue_declare(queue='controlador', durable=False, auto_delete=True)
 
-    channel.basic_qos(prefetch_count=1)
+    #channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue='controlador', on_message_callback=on_request)
 
     print(" [x] Awaiting RPC requests")

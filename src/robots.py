@@ -5,12 +5,11 @@ import time
 import pika
 import threading
 def recepcionRobots(ch, method, props, body):
-    print("Mensaje recibido con exito" )
     hilo = threading.Thread(target = work, args = (ch,method,props,body))
-    #hilo.start()
+    hilo.start()
     return
 def sendMessage(ch, method, props, body):
-    ch.basic_publish(exchange='', routing_key='controlador',properties=pika.BasicProperties(correlation_id = props.correlation_id), body = "Robot: not found")
+    ch.basic_publish(exchange='', routing_key='controlador',properties=pika.BasicProperties(correlation_id = props.correlation_id), body = body)
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
 def work(ch, method, props, body):
@@ -21,14 +20,16 @@ def work(ch, method, props, body):
     pika.ConnectionParameters(host='localhost'))
     ch = connection.channel()
 
+    
     if (probability >= ceiling):
         time.sleep(wait)
         print("Envio de pedido")
         sendMessage(ch, method, props, "Robot: Id_pedido {}".format(parseBody(body)[:-1]))
-    else:
+    
+    else:    
         print("Products not found")
         sendMessage(ch, method, props, "Robot: not found")
-
+    
 
 def parseBody(body):
     body = str(body)
@@ -41,17 +42,14 @@ def parseBody(body):
                 else:
                     i+=1
 def main():
-    connection = pika.BlockingConnection(
-        pika.ConnectionParameters(host='localhost'))
-
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
 
     channel.queue_declare(queue='robot', durable=False, auto_delete=True)
 
-    channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue='robot', on_message_callback=recepcionRobots)
+    channel.basic_consume(queue='robot', on_message_callback=recepcionRobots, auto_ack=True)
 
-    print(" [x] Awaiting controller requests")
+    print(' [*] Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
     
 if __name__ == '__main__':
