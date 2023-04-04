@@ -5,41 +5,12 @@ import time
 import pika
 import threading
 
-def recepcionRepartidores(ch, method, properties, body):
-    
-    counter = 0
-    probability = random.randint(0,10)
-    wait = random.randint(10,20)
-    while (probability != random.randint(0,10)):
-        if (counter == 2):
-            print("Bro estas en casa?")
-            return
-        time.sleep(wait)
-        counter += 1
-    print("Mensaje llego con exito")
-
-def recepcionRobots(ch, method, props, body):
-    wait = random.randint(5,10)
-    probability = random.randint(0,10)
-    ceiling = random.randint(0,10)
-
-    if (probability >= ceiling):
-        time.sleep(wait)
-        ch.basic_publish(exchange='', routing_key=props.reply_to,properties=pika.BasicProperties(correlation_id = props.correlation_id), body = body)
-        
-    else:
-        print("dame una alegria")
-        ch.basic_publish(exchange='', routing_key=props.reply_to,properties=pika.BasicProperties(correlation_id = props.correlation_id), body = "Not enough products")
-        return
-    
-    return
-
-
 def parseBody(body:str):
-    print(body.find('Cliente:'))
+    
     if body.find('Cliente:') >= 0:
-        print("Client signup efectivo {}".format(body))
+        print("{}".format(body))
         return ""
+    
     elif body.find('Pedido:') >= 0:
         for ele in body.split(";",3):
             if ele.find("id_cliente") >= 0:    
@@ -47,10 +18,13 @@ def parseBody(body:str):
                     if value == " ":
                         return "error"
                 else:   
-                    print("Formato de pedido correcto: {}".format(body))
+                    print("{}".format(body))
                     return "robot"
+                
     elif body.find('Robot:') >= 0:
-        print("Elementos suficientes: {}".format(body))
+        if body.find("not found") >= 0:
+            return "not found"
+        print("{}".format(body))
         return "repartidor"
 
 def on_request(ch, method, props, body):
@@ -59,36 +33,44 @@ def on_request(ch, method, props, body):
         ch.basic_publish(exchange='',
                         routing_key=props.reply_to,
                         properties=pika.BasicProperties(correlation_id = props.correlation_id),
-                        body="recibido correctamente")
+                        body="Cliente: Recibido")
         ch.basic_ack(delivery_tag=method.delivery_tag)
 
     elif verif == "error":
         ch.basic_publish(exchange='',
                         routing_key=props.reply_to,
                         properties=pika.BasicProperties(correlation_id = props.correlation_id),
-                        body="Pedido incorrecto")
+                        body="Pedido: incorrecto")
         ch.basic_ack(delivery_tag=method.delivery_tag)
     else:
-        if verif == "repartidores":
-            hilo = threading.Thread(target=recepcionRepartidores, args = (ch, method, props, body))
-            hilo.start()
-        else: 
+        
+        if verif == "repartidor":
+            ch.basic_publish(exchange='',
+                        routing_key="repartidor",
+                        properties=pika.BasicProperties(correlation_id = props.correlation_id),
+                        body=body)
+        elif verif == "not found":
+            print("not enough products")
+        
+        elif 'robot':
             ch.basic_publish(exchange='',
                         routing_key=props.reply_to,
                         properties=pika.BasicProperties(correlation_id = props.correlation_id),
-                        body="Pedido correcto")
+                        body="Pedido: correcto ")
             ch.basic_ack(delivery_tag=method.delivery_tag)
-            #echar un ojo al envio de mensaje
-
-            hilo = threading.Thread(target=recepcionRobots, args = (ch, method, props, body))
-            hilo.start()
+            
+            ch.basic_publish(exchange='',
+                        routing_key="robot",
+                        properties=pika.BasicProperties(correlation_id = props.correlation_id),
+                        body=body)
+ 
 def main():
     connection = pika.BlockingConnection(
         pika.ConnectionParameters(host='localhost'))
 
     channel = connection.channel()
 
-    channel.queue_declare(queue='controlador')
+    channel.queue_declare(queue='controlador', durable=False, auto_delete=True)
 
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue='controlador', on_message_callback=on_request)

@@ -45,7 +45,7 @@ class RpcClient(object):
                 reply_to=self.callback_queue,
                 correlation_id=self.corr_id,
             ),
-            body=n)
+            body=str(n))
         self.connection.process_data_events(time_limit=None)
         return self.response
 
@@ -108,7 +108,7 @@ def main():
     
 
     # apagar la conexion iniciada por el hilo
-    rpc.connection.close()
+    #rpc.connection.close()
 # Funcion encargada del envio de un signin
 if __name__ == '__main__':
     try:
